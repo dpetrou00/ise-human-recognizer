@@ -2,13 +2,26 @@
 set -e
 
 echo "=== Installing system dependencies ==="
-sudo apt-get install -y libgles2 libxcb-xinerama0 libxcb-cursor0
+PKGS="libgles2 libxcb-xinerama0 libxcb-cursor0"
+MISSING=""
+for pkg in $PKGS; do
+    dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "install ok installed" || MISSING="$MISSING $pkg"
+done
+if [ -n "$MISSING" ]; then
+    sudo apt-get install -y $MISSING
+else
+    echo "System packages already installed, skipping."
+fi
 
 echo "=== Installing Python dependencies ==="
+if [ ! -d ".venv" ]; then
+    python3 -m venv .venv
+fi
+source .venv/bin/activate
 pip install -r requirements.txt
 
 echo "=== Downloading MediaPipe models ==="
-mkdir -p model/mediapipe model/data model/checkpoints
+mkdir -p model/mediapipe model/data model/checkpoints logs/
 
 MEDIAPIPE_BASE="https://storage.googleapis.com/mediapipe-models"
 
