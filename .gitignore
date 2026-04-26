@@ -2,7 +2,6 @@
 .venv/
 logs/
 model/mediapipe/
-model/data/
 model/checkpoints/
 src/__pycache__
 .env

@@ -32,7 +32,18 @@ CLASSES = ["no_signal", "thumbs_up", "palm_open"]
 
 
 def _split(X: np.ndarray, y: np.ndarray):
-    """Stratified 70 / 15 / 15 train / val / test split."""
+    """Split data into stratified 70 / 15 / 15 train / val / test partitions.
+
+    Stratification preserves class proportions across all three splits.
+    A fixed random state ensures reproducibility across runs.
+
+    Args:
+        X (np.ndarray): Feature matrix of shape (n_samples, 63).
+        y (np.ndarray): Class label array of shape (n_samples,).
+
+    Returns:
+        tuple: (X_train, X_val, X_test, y_train, y_val, y_test) arrays.
+    """
     X_train, X_tmp, y_train, y_tmp = train_test_split(
         X, y, test_size=0.30, stratify=y, random_state=42
     )
@@ -43,6 +54,17 @@ def _split(X: np.ndarray, y: np.ndarray):
 
 
 def _evaluate(model: MLPClassifier, X: np.ndarray, y: np.ndarray) -> dict:
+    """Compute accuracy, macro precision/recall/F1, and per-class metrics.
+
+    Args:
+        model (MLPClassifier): A fitted scikit-learn MLP model.
+        X (np.ndarray): Feature matrix to evaluate on.
+        y (np.ndarray): True class labels.
+
+    Returns:
+        dict: A metrics dict with keys 'accuracy', 'precision_macro',
+            'recall_macro', 'f1_macro', and 'per_class' (one entry per class).
+    """
     y_pred = model.predict(X)
     report = classification_report(y, y_pred, labels=CLASSES, output_dict=True, zero_division=0)
     return {
@@ -63,21 +85,33 @@ def _evaluate(model: MLPClassifier, X: np.ndarray, y: np.ndarray) -> dict:
 
 
 def main() -> None:
+    """Train the gesture classifier and save a timestamped checkpoint.
+
+    Loads landmarks.csv, splits the data, trains an MLP, evaluates on all
+    three splits, and writes the model and metrics to model/checkpoints/<run_id>/.
+    The trained model is also promoted to model/gesture_classifier.pkl for
+    immediate use by the demo.
+    """
+    # Abort early if the training data has not been collected yet
     if not DATA_PATH.exists():
         print(f"No data found at {DATA_PATH}. Run collect_data.py first.")
         sys.exit(1)
 
+    # Load the landmark CSV and show per-class sample counts
     df = pd.read_csv(DATA_PATH)
     print(f"Loaded {len(df)} samples.")
     print(df["label"].value_counts().to_string())
     print()
 
+    # Separate features (63 landmark coordinates) from class labels
     X = df.drop("label", axis=1).values.astype(np.float32)
     y = df["label"].values
 
+    # Partition into train / val / test with class-balanced stratification
     X_train, X_val, X_test, y_train, y_val, y_test = _split(X, y)
     print(f"Split — train: {len(X_train)}, val: {len(X_val)}, test: {len(X_test)}\n")
 
+    # Build the MLP: two hidden layers (128 → 64) with ReLU, trained with Adam
     model = MLPClassifier(
         hidden_layer_sizes=(128, 64),
         activation="relu",
@@ -90,6 +124,7 @@ def main() -> None:
     model.fit(X_train, y_train)
     print(f"\nConverged in {model.n_iter_} iterations.\n")
 
+    # Evaluate on all three splits and print a summary row for each
     splits_metrics: dict = {}
     for name, X_s, y_s in [
         ("train", X_train, y_train),
@@ -105,6 +140,7 @@ def main() -> None:
 
     print()
 
+    # Bundle model config, convergence info, loss curve, and split metrics for the checkpoint
     metrics = {
         "model_config": {
             "hidden_layer_sizes": list(model.hidden_layer_sizes),
@@ -116,6 +152,7 @@ def main() -> None:
         "splits": splits_metrics,
     }
 
+    # Save model and metrics to a timestamped checkpoint directory
     run_id = time.strftime("%Y%m%d_%H%M%S")
     checkpoint_dir = CHECKPOINTS_DIR / run_id
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
