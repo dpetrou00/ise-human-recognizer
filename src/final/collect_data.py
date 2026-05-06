@@ -21,9 +21,9 @@ import cv2
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from capture import receive_frames
-from hands import HandDetector
-from overlay import draw_landmarks
+from draft.capture import receive_frames
+from draft.hands import HandDetector
+from draft.overlay import draw_landmarks
 
 DATA_PATH = Path(__file__).parent.parent / "model" / "data" / "landmarks.csv"
 

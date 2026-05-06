@@ -29,13 +29,13 @@ from PySide6.QtGui import QImage, QPixmap
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from capture import receive_frames
-from pose import PoseDetector
-from distance import DistanceEstimator
-from hands import HandDetector
-from gesture import build_classifier, GESTURE_COMMANDS, MODEL_PATH
-from overlay import draw_landmarks
-from logger import append_event
+from draft.capture import receive_frames
+from draft.pose import PoseDetector
+from draft.distance import DistanceEstimator
+from draft.hands import HandDetector
+from draft.gesture import build_classifier, GESTURE_COMMANDS, MODEL_PATH
+from draft.overlay import draw_landmarks
+from draft.logger import append_event
 
 LOG_PATH = Path(__file__).parent.parent / "logs" / "events.csv"
 

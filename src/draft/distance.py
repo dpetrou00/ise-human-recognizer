@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from pose import PoseResult
+from draft.pose import PoseResult
 
 
 @dataclass

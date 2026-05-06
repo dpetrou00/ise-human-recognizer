@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-from distance import DistanceResult
+from draft.distance import DistanceResult
 
 # Pairs of landmark indices defining the hand skeleton connections.
 # Each tuple (start, end) draws a line between those two landmark points.

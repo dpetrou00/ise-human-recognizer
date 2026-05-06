@@ -4,10 +4,10 @@ import time
 
 import numpy as np
 
-from pose import PoseDetector
-from distance import DistanceEstimator
-from hands import HandDetector
-from gesture import GestureClassifier, GESTURE_COMMANDS
+from draft.pose import PoseDetector
+from draft.distance import DistanceEstimator
+from draft.hands import HandDetector
+from draft.gesture import GestureClassifier, GESTURE_COMMANDS
 
 
 @dataclass
